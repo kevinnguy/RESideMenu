@@ -56,6 +56,7 @@ NSString * const RESideMenuDidClose = @"RESideMenuDidClose";
 @implementation RESideMenu
 @synthesize backgroundView = _backgroundView;
 @synthesize tableView = _tableView;
+@synthesize menuView = _menuView;
 
 - (id)init
 {
@@ -112,10 +113,10 @@ NSString * const RESideMenuDidClose = @"RESideMenuDidClose";
     // Animate to disappear
     //
     __typeof (&*self) __weak weakSelf = self;
-    weakSelf.tableView.transform = CGAffineTransformScale(_tableView.transform, 0.9, 0.9);
+    weakSelf.menuView.transform = CGAffineTransformScale(_menuView.transform, 0.9, 0.9);
     [UIView animateWithDuration:0.5 animations:^{
-        weakSelf.tableView.transform = CGAffineTransformIdentity;
-        weakSelf.tableView.alpha = 0;
+        weakSelf.menuView.transform = CGAffineTransformIdentity;
+        weakSelf.menuView.alpha = 0;
     }];
     
     // Set items and reload
@@ -135,10 +136,10 @@ NSString * const RESideMenuDidClose = @"RESideMenuDidClose";
     
     // Animate to reappear once reloaded
     //
-    weakSelf.tableView.transform = CGAffineTransformScale(_tableView.transform, 1, 1);
+    weakSelf.menuView.transform = CGAffineTransformScale(_menuView.transform, 1, 1);
     [UIView animateWithDuration:0.5 animations:^{
-        weakSelf.tableView.transform = CGAffineTransformIdentity;
-        weakSelf.tableView.alpha = 1;
+        weakSelf.menuView.transform = CGAffineTransformIdentity;
+        weakSelf.menuView.alpha = 1;
     }];
 }
 
@@ -149,7 +150,7 @@ NSString * const RESideMenuDidClose = @"RESideMenuDidClose";
 {
     if (_isShowing)
         return;
-
+    
     [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deviceOrientationDidChange) name:UIDeviceOrientationDidChangeNotification object:nil];
     [[NSNotificationCenter defaultCenter] postNotificationName:RESideMenuWillOpen object:nil];
@@ -218,9 +219,9 @@ NSString * const RESideMenuDidClose = @"RESideMenuDidClose";
     
     [self.topController.view setNeedsDisplay];
     [self.view bringSubviewToFront:_backgroundView];
-    [self.view bringSubviewToFront:_tableView];
+    [self.view bringSubviewToFront:_menuView];
     [self.view bringSubviewToFront:_screenshotView];
-
+    
     __typeof (&*self) __weak weakSelf = self;
     double delayInSeconds = 0.1;
     dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
@@ -253,7 +254,7 @@ NSString * const RESideMenuDidClose = @"RESideMenuDidClose";
 
 - (REBackgroundView*)backgroundView
 {
-    if(!_backgroundView) {        
+    if(!_backgroundView) {
         _backgroundView = [[REBackgroundView alloc] initWithFrame:CGRectMake(0, -20, self.view.bounds.size.width, self.view.bounds.size.height + 20)];
         _backgroundView.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
         _backgroundView.backgroundImage = _backgroundImage;
@@ -277,6 +278,15 @@ NSString * const RESideMenuDidClose = @"RESideMenuDidClose";
     return _tableView;
 }
 
+- (UIView *)menuView
+{
+    if(!_menuView) {
+        _menuView = [[UIView alloc] initWithFrame:CGRectMake(self.backgroundView.frame.origin.x, self.backgroundView.frame.origin.y, self.backgroundView.frame.size.width, self.backgroundView.frame.size.height)];
+        _menuView.backgroundColor = [UIColor clearColor];
+    }
+    return _menuView;
+}
+
 - (void)updateViews
 {
     // Take a snapshot
@@ -295,8 +305,9 @@ NSString * const RESideMenuDidClose = @"RESideMenuDidClose";
     if(!self.backgroundView.superview)
         [self.view addSubview:_backgroundView];
     
-    self.tableView.alpha = 0;
-    [self.view addSubview:self.tableView];
+    //    self.tableView.alpha = 0;
+    //    [self.view addSubview:self.tableView];
+    [self.view addSubview:self.menuView];
     
     [self.view addSubview:_screenshotView];
     
@@ -306,7 +317,7 @@ NSString * const RESideMenuDidClose = @"RESideMenuDidClose";
     
     UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapGestureRecognized:)];
     [_screenshotView addGestureRecognizer:tapGestureRecognizer];
-
+    
     [[NSNotificationCenter defaultCenter] postNotificationName:RESideMenuDidOpen object:nil];
 }
 
@@ -331,19 +342,19 @@ NSString * const RESideMenuDidClose = @"RESideMenuDidClose";
     _screenshotView.layer.bounds = CGRectMake(self.view.bounds.size.width - widthOffset, (self.view.bounds.size.height - newHeight) / 2.0, newWidth, newHeight);
     [CATransaction commit];
     
-    if (_tableView.alpha  != 1 ) {
+    if (_menuView.alpha  != 1 ) {
         __typeof (&*self) __weak weakSelf = self;
         
-        if(_tableView.alpha == 0){
-            weakSelf.tableView.transform = CGAffineTransformScale(CGAffineTransformIdentity, 0.9, 0.9);
+        if(_menuView.alpha == 0){
+            weakSelf.menuView.transform = CGAffineTransformScale(CGAffineTransformIdentity, 0.9, 0.9);
         }
         
         [UIView animateWithDuration:0.5 animations:^{
-            weakSelf.tableView.transform = CGAffineTransformIdentity;
+            weakSelf.menuView.transform = CGAffineTransformIdentity;
         }];
         
         [UIView animateWithDuration:0.6 animations:^{
-            weakSelf.tableView.alpha = 1;
+            weakSelf.menuView.alpha = 1;
         }];
     }
 }
@@ -373,12 +384,12 @@ NSString * const RESideMenuDidClose = @"RESideMenuDidClose";
     // Restore the status bar to its original state
     //
     [[UIApplication sharedApplication] setStatusBarHidden:_appIsHidingStatusBar withAnimation:UIStatusBarAnimationFade];
-
+    
     _isShowing = NO;
     [self updateStatusBar];
 }
 
-- (void) updateStatusBar
+- (void)updateStatusBar
 {
     if ([self respondsToSelector:@selector(setNeedsStatusBarAppearanceUpdate)]) {
         __typeof (&*self) __weak weakSelf = self;
@@ -391,7 +402,7 @@ NSString * const RESideMenuDidClose = @"RESideMenuDidClose";
 - (void)restoreView
 {
     [_backgroundView removeFromSuperview];
-    [_tableView removeFromSuperview];
+    [_menuView removeFromSuperview];
     
     __typeof (&*self) __weak weakSelf = self;
     [UIView animateWithDuration:0.1 animations:^{
@@ -433,7 +444,7 @@ NSString * const RESideMenuDidClose = @"RESideMenuDidClose";
         } else {
             _initialX = _screenshotView.frame.origin.x;
         }
-        _tableView.transform = CGAffineTransformIdentity;
+        _menuView.transform = CGAffineTransformIdentity;
 	}
 	
     if (sender.state == UIGestureRecognizerStateChanged) {
@@ -446,9 +457,9 @@ NSString * const RESideMenuDidClose = @"RESideMenuDidClose";
         CGFloat widthOffset = self.view.bounds.size.width / (UIDeviceOrientationIsPortrait([[UIApplication sharedApplication] statusBarOrientation]) ? 4 : 3);
         
         float alphaOffset = (x + widthOffset) / self.view.bounds.size.width;
-        _tableView.alpha = alphaOffset;
+        _menuView.alpha = alphaOffset;
         float scaleOffset = 0.6 +(alphaOffset*0.4);
-        _tableView.transform = CGAffineTransformScale(CGAffineTransformIdentity, scaleOffset, scaleOffset);
+        _menuView.transform = CGAffineTransformScale(CGAffineTransformIdentity, scaleOffset, scaleOffset);
         
         if (x < 0 || y < 0) {
             _screenshotView.frame = CGRectMake(0, 0, _originalSize.width, _originalSize.height);
@@ -456,7 +467,7 @@ NSString * const RESideMenuDidClose = @"RESideMenuDidClose";
             _screenshotView.frame = CGRectMake(x, y, _originalSize.width * m, _originalSize.height * m);
         }
     }
-
+    
     if (sender.state == UIGestureRecognizerStateEnded && _screenshotView) {
         if ([sender velocityInView:self.view].x < 0) {
             [self restoreFromRect:_screenshotView.frame];
@@ -520,7 +531,7 @@ NSString * const RESideMenuDidClose = @"RESideMenuDidClose";
             cell.textLabel.text = item.title;
             cell.imageView.userInteractionEnabled = YES;
             cell.imageView.tag = indexPath.row;
-
+            
             break;
     }
     cell.imageView.image = item.image;
@@ -532,7 +543,7 @@ NSString * const RESideMenuDidClose = @"RESideMenuDidClose";
     return cell;
 }
 
-#pragma mark - 
+#pragma mark -
 #pragma mark User Interaction
 
 - (void)imageAction:(UITapGestureRecognizer *)sender
@@ -544,7 +555,7 @@ NSString * const RESideMenuDidClose = @"RESideMenuDidClose";
     }
 }
 
-#pragma mark - 
+#pragma mark -
 #pragma mark Text Field
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField

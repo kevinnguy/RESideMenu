@@ -50,6 +50,7 @@ extern NSString * const RESideMenuDidClose;
 @property (assign, readwrite, nonatomic) BOOL hideStatusBarArea;
 @property (assign, readwrite, nonatomic) BOOL isShowing;
 @property (strong, readonly, nonatomic) REBackgroundView *backgroundView;
+@property (strong, readwrite, nonatomic) UIView *menuView;
 
 @property (strong, readonly, nonatomic) NSString *lastFieldInput;
 
